@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
-const NuevoRegistro = dynamic(() => import("@/components/views/NuevoRegistro"), { ssr: true });
+const NuevoRegistro = dynamic(() => import("@/components/views/MarcasForm"), { ssr: true });
 
 export default function Page() {
-  return <NuevoRegistro />;
+  return <NuevoRegistro mode="create" />;
 }
