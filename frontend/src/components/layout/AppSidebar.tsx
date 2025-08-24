@@ -1,6 +1,8 @@
-import { useState } from "react";
+"use client";
+
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Home, Plus, FileText, BarChart3, Settings } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
@@ -28,21 +30,18 @@ const otherItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    if (path === "/" && currentPath === "/") return true;
-    if (path !== "/" && currentPath.startsWith(path)) return true;
+    if (path === "/" && pathname === "/") return true;
+    if (path !== "/" && pathname.startsWith(path)) return true;
     return false;
   };
 
-  const getNavClasses = (path: string) => {
-    const active = isActive(path);
-    return active 
-      ? "bg-primary text-primary-foreground shadow-md" 
+  const getNavClasses = (path: string) =>
+    isActive(path)
+      ? "bg-primary text-primary-foreground shadow-md"
       : "hover:bg-accent hover:text-accent-foreground";
-  };
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
@@ -72,13 +71,13 @@ export function AppSidebar() {
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      className={`${getNavClasses(item.url)} transition-all duration-200`}
+                    <Link
+                      href={item.url}
+                      className={`${getNavClasses(item.url)} transition-all duration-200 flex items-center gap-3 px-3 py-2 rounded-md`}
                     >
                       <item.icon className="w-5 h-5" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
+                      {!collapsed && <span>{item.title}</span>}
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -96,13 +95,13 @@ export function AppSidebar() {
               {otherItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      className={`${getNavClasses(item.url)} transition-all duration-200`}
+                    <Link
+                      href={item.url}
+                      className={`${getNavClasses(item.url)} transition-all duration-200 flex items-center gap-3 px-3 py-2 rounded-md`}
                     >
                       <item.icon className="w-5 h-5" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
+                      {!collapsed && <span>{item.title}</span>}
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

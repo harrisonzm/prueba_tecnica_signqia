@@ -1,18 +1,17 @@
-import { useLocation } from "react-router-dom";
+"use client";
+
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-const NotFound = () => {
-  const location = useLocation();
+export default function NotFound() {
+  const pathname = usePathname();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
+    console.error("404 Error: User attempted to access non-existent route:", pathname);
+  }, [pathname]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -28,21 +27,17 @@ const NotFound = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/">
+          <Link href="/">
             <Button className="btn-gradient">
               <Home className="w-4 h-4 mr-2" />
               Volver al Dashboard
             </Button>
           </Link>
-          <Link to="/marcas">
-            <Button variant="outline" className="btn-ghost-primary">
-              Ver Marcas
-            </Button>
+          <Link href="/marcas">
+            <Button variant="outline" className="btn-ghost-primary">Ver Marcas</Button>
           </Link>
         </div>
       </div>
     </div>
   );
-};
-
-export default NotFound;
+}
