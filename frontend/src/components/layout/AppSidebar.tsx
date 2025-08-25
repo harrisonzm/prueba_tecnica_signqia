@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Registro de Marcas", url: "/marcas", icon: FileText },
+  { title: "Registro de Marcas", url: "/", icon: FileText },
   { title: "Nuevo Registro", url: "/marcas/nuevo", icon: Plus },
 ];
 
