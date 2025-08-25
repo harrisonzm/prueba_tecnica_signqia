@@ -1,6 +1,5 @@
 import dynamic from "next/dynamic";
-const Dashboard = dynamic(() => import("@/components/views/Dashboard"), { ssr: true });
-
+const MarcasLista = dynamic(() => import("@/components/views/MarcasLista"), { ssr: true });
 export default function Page() {
-  return <Dashboard />;
+  return <MarcasLista />;
 }

@@ -56,3 +56,22 @@ export async function fetchMarcasDetalles(): Promise<MarcasDetalles> {
     });
     return MarcasDetallesSchema.parse(data);
 }
+
+function qs(params: Record<string, unknown>) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") q.set(k, String(v));
+  });
+  return q.toString();
+}
+
+/** Página (batch) de marcas */
+export async function fetchMarcasPage(opts: {
+  limit?: number; offset?: number; estado?: "ACTIVA" | "INACTIVA" | "SUSPENDIDA"; search?: string;
+}): Promise<Marca[]> {
+  const { limit = 50, offset = 0, estado, search } = opts ?? {};
+  const url = `${base()}/marcas?${qs({ limit, offset, estado, search })}`;
+  const data = await http<unknown>(url, { method: "GET", cache: "no-store" });
+  return MarcasListSchema.parse(data);
+}
+

@@ -1,17 +1,41 @@
 // hooks/marcas.ts
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { marcasKeys } from "@/lib/marcas.key";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { Estado, marcasKeys } from "@/lib/marcas.key";
 import {
   fetchMarcas,
   fetchMarcaById,
   createMarca,
   updateMarca,
   deleteMarca,
-  fetchMarcasDetalles
+  fetchMarcasDetalles,
+  fetchMarcasPage,
 } from "@/lib/marcas.api";
 import type { Marca, MarcaCreate, MarcaUpdate, MarcasDetalles } from "@/types/marca-api";
+
+
+export function useMarcasInfinite(params: {
+  estado?: Estado;
+  search?: string;
+  limit?: number;   // default 50
+}) {
+  const { estado, search, limit = 50 } = params ?? {};
+  return useInfiniteQuery<Marca[], Error>({
+    queryKey: marcasKeys.infinite({ estado, search, limit }),
+    initialPageParam: 0, // offset inicial
+    queryFn: async ({ pageParam }) => {
+      const offset = typeof pageParam === "number" ? pageParam : 0;
+      return fetchMarcasPage({ estado, search, limit, offset });
+    },
+    getNextPageParam: (lastPage, _allPages, lastOffset) => {
+      const prevOffset = typeof lastOffset === "number" ? lastOffset : 0;
+      // Si la última página llegó completa, hay chance de más:
+      return lastPage.length === limit ? prevOffset + lastPage.length : undefined;
+    },
+    staleTime: 60_000,
+  });
+}
 
 /** Lista de marcas */
 export function useMarcas() {
@@ -24,7 +48,6 @@ export function useMarcas() {
 
 /** Detalle por id */
 export function useMarca(id?: number, opts?: { enabled?: boolean }) {
-  console.log( `-------------------------------------habilitado ? ${opts.enabled}`, id)
   const enabled = !!opts?.enabled && typeof id === "number" && Number.isFinite(id);
   return useQuery({
     queryKey: ["marcas", "detail", enabled ? id : "new"],
@@ -120,10 +143,24 @@ export function useDeleteMarca() {
   });
 }
 
-export function useMarcasDetalles() {
-  return useQuery<MarcasDetalles>({
-    queryKey: marcasKeys.detalles(),
-    queryFn: fetchMarcasDetalles,
+// export function useMarcasDetalles() {
+//   return useQuery<MarcasDetalles>({
+//     queryKey: marcasKeys.detalles(),
+//     queryFn: fetchMarcasDetalles,
+//     staleTime: 60_000,
+//   });
+// }
+/** Paginado clásico (page/pageSize) */
+export function useMarcasPage(params: { page: number; pageSize?: number; estado?: Estado; search?: string }) {
+  const { page, pageSize = 50, estado, search } = params;
+  const offset = Math.max(0, (page - 1) * pageSize);
+  const limit = pageSize;
+
+  return useQuery<Marca[], Error>({
+    queryKey: marcasKeys.page({ estado, search, limit, offset }),
+    queryFn: () => fetchMarcasPage({ estado, search, limit, offset }),
+    // v5: en vez de keepPreviousData
+    placeholderData: (prev) => prev,
     staleTime: 60_000,
   });
 }

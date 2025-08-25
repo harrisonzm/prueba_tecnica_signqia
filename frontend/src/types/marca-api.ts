@@ -41,3 +41,4 @@ export const MarcasDetallesSchema = z.object({
 
 export type MarcasDetalles = z.infer<typeof MarcasDetallesSchema>;
 export type ActividadReciente = z.infer<typeof ActividadRecienteSchema>;
+
