@@ -2,8 +2,8 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
-  API_BASE_URL: z.string().url().default("http://localhost:8000/api/v1"),
-  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:8000/api/v1"),
+  API_BASE_URL: z.string().url().default("https://prueba-tecnica-signqia-1.onrender.com/api/v1"),
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("https://prueba-tecnica-signqia-1.onrender.com/api/v1"),
 });
 
 export const env = EnvSchema.parse({
