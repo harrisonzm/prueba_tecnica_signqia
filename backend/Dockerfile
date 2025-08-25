@@ -1,21 +1,41 @@
+# backend/Dockerfile
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# System deps
-RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+# 1) Instala dependencias primero para cachear
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Install deps
-COPY pyproject.toml README.md /app/
-RUN pip install --upgrade pip && pip install ".[dev]"
+# 2) Copia TODO el código (main.py, alembic.ini, carpeta alembic/, etc.)
+COPY . .
 
-# Copy source
-COPY app /app
-COPY alembic.ini /app/alembic.ini
-COPY alembic /app/alembic
+# Ajusta si tu app no está en main:app (por ejemplo app.main:app)
+ENV APP_MODULE="main:app" \
+    PORT=8000
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 3) En el arranque del contenedor:
+#    - Normaliza DATABASE_URL_SYNC para Alembic si usas +asyncpg
+#    - Ejecuta alembic upgrade head
+#    - Arranca en producción con Gunicorn + UvicornWorker
+CMD ["/bin/sh", "-lc", "\
+  set -e; \
+  if [ -z \"${DATABASE_URL_SYNC}\" ] && [ -n \"${DATABASE_URL}\" ]; then \
+    case \"${DATABASE_URL}\" in \
+      postgresql+asyncpg://*) export DATABASE_URL_SYNC=$(printf %s \"${DATABASE_URL}\" | sed 's/+asyncpg//');; \
+      *) export DATABASE_URL_SYNC=\"${DATABASE_URL}\";; \
+    esac; \
+  fi; \
+  alembic upgrade head; \
+  exec gunicorn \"${APP_MODULE}\" \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --workers ${WORKERS:-2} \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --timeout 60 \
+"]
