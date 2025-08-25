@@ -3,7 +3,8 @@ from pydantic import AnyHttpUrl, Field
 from typing import List
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True)
+    # No .env
+    model_config = SettingsConfigDict(env_file=None, env_ignore_empty=True)
 
     APP_NAME: str = "Marca API"
     APP_VERSION: str = "1.0.0"
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     BACKEND_CORS_ORIGINS: str | None = "*"
 
+    # (no usados ya, los dejo por compatibilidad)
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "registroMarca"
@@ -20,16 +22,22 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
+        # ASYNC (asyncpg) -> usa ssl=true (NO sslmode)
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            "postgresql+asyncpg://registromarca_user:"
+            "8aOmaY9nqNrFFDrcSWy6rKaXlekjVb4c"
+            "@dpg-d2lsq5h5pdvs73b3ed4g-a.oregon-postgres.render.com:5432/"
+            "registromarca?ssl=true"
         )
 
     @property
     def sync_database_url(self) -> str:
+        # SYNC (psycopg2/Alembic) -> sslmode=require
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            "postgresql+psycopg2://registromarca_user:"
+            "8aOmaY9nqNrFFDrcSWy6rKaXlekjVb4c"
+            "@dpg-d2lsq5h5pdvs73b3ed4g-a.oregon-postgres.render.com:5432/"
+            "registromarca?sslmode=require"
         )
 
 settings = Settings()
