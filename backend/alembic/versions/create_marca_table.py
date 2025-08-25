@@ -1,7 +1,7 @@
+# alembic/versions/0001_create_marca_table.py
 from alembic import op
 import sqlalchemy as sa
 
-# revision identifiers, used by Alembic.
 revision = "0001_create_marca_table"
 down_revision = None
 branch_labels = None
@@ -14,9 +14,25 @@ def upgrade() -> None:
         sa.Column("titulo", sa.String(length=255), nullable=False),
         sa.Column("nombre", sa.String(length=255), nullable=False),
         sa.Column("estado", sa.String(length=20), nullable=False),
+
+        # NUEVO: timestamps
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("CURRENT_TIMESTAMP"),  # o sa.text("timezone('utc', now())")
+            nullable=False,
+        ),
+        sa.Column(
+            "approved_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=True,
+        ),
     )
+
     op.create_index("ix_marcas_estado", "marcas", ["estado"])
+    op.create_index("ix_marcas_approved_at", "marcas", ["approved_at"])
 
 def downgrade() -> None:
+    op.drop_index("ix_marcas_approved_at", table_name="marcas")
     op.drop_index("ix_marcas_estado", table_name="marcas")
     op.drop_table("marcas")

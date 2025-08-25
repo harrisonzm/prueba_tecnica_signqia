@@ -7,3 +7,4 @@ loguru
 orjson
 asyncpg
 alembic
+psycopg[binary]>=3.1
