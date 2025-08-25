@@ -1,19 +1,23 @@
+# alembic/env.py
 from __future__ import annotations
+
+# === 1) AÑADE ESTO ARRIBA DEL TODO (antes de importar bd/core) ===
+import pathlib, sys
+BASE_DIR = pathlib.Path(__file__).resolve().parents[1]  # -> /app
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+# ================================================================
+
 from logging.config import fileConfig
-import pathlib
-import sys
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from alembic import context
+
+# Ya con sys.path correcto, ahora sí importa tus módulos
 from bd.base import Base
 from core.config import settings
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine
 
-# Interpret the config file for Python logging.import sys, pathlib
-BASE_DIR = pathlib.Path(__file__).resolve().parents[1]  # /app
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
