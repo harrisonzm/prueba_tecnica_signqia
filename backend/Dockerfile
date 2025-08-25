@@ -1,5 +1,5 @@
 # backend/Dockerfile
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -7,20 +7,36 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema (mínimas). Agrega libpq-dev/gcc si usas psycopg2.
+# Paquetes mínimos (build-essential por si alguna wheel compila)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential curl \
+ && rm -rf /var/lib/apt/lists/*
 
-# Instalar deps de Python
+# Instalar dependencias Python primero para cachear
 COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copiar código
-# (copiamos solo lo necesario para mantener la capa pequeña)
+# Copiar código (incluye alembic.ini y carpeta alembic/)
 COPY . /app
 
-# Arranque: aplica migraciones y levanta uvicorn
-# Nota: tu app está en main.py -> "main:app"
-CMD alembic upgrade head && \
-    uvicorn main:app --host 0.0.0.0 --port 8000
+# Crear usuario no root
+RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Variables típicas de runtime (ajústalas en tu entorno/compose)
+ENV ENVIRONMENT=production \
+    LOG_LEVEL=INFO \
+    PORT=8000
+# Si usas SQLAlchemy async con asyncpg en la app, define DATABASE_URL así:
+# DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
+
+# Alembic suele requerir driver sync en migraciones. En tu env.py,
+# reemplaza +asyncpg por cadena vacía para migrar (ver nota abajo).
+# Alternativa: exporta también DATABASE_URL_SYNC sin +asyncpg y léelo en env.py.
+
+# Copiamos entrypoint y lo marcamos ejecutable
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]
