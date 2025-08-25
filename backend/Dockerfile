@@ -9,7 +9,7 @@ WORKDIR /app
 
 # 1) Instalar dependencias primero para aprovechar cache
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN  pip install -r requirements.txt
 
 # 2) Copiar el resto del código (incluye alembic.ini y carpeta alembic/)
 COPY . .
