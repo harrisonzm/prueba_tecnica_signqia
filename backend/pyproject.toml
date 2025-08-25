@@ -1,0 +1,49 @@
+[project]
+name = "fastapi-marca-api"
+version = "1.0.0"
+description = "API REST de Marcas con FastAPI y PostgreSQL (async)"
+authors = [{name = "You"}]
+requires-python = ">=3.12"
+readme = "README.md"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.1",
+    "SQLAlchemy>=2.0.30",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.2",
+    "python-multipart>=0.0.9",
+    "loguru>=0.7.2",
+    "httpx>=0.27.0",
+    "orjson>=3.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "anyio>=4.4.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    "types-orjson",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+lint.select = ["E","F","I","UP","B","SIM"]
+lint.ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_ignores = true
+strict = false
+plugins = []
+
+[tool.alembic]
+# opcional, solo descriptivo
