@@ -160,7 +160,7 @@ export default function MarcasLista() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead className="font-semibold">#</TableHead>
+                    <TableHead className="font-semibold">ID</TableHead>
                     <TableHead className="font-semibold">Nombre</TableHead>
                     <TableHead className="font-semibold">Título</TableHead>
                     <TableHead className="font-semibold">Estado</TableHead>
@@ -168,9 +168,9 @@ export default function MarcasLista() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {!isLoading && marcas.map((m, i) => (
+                  {!isLoading && marcas.map((m) => (
                     <TableRow key={m.id} className="hover:bg-muted/20 transition-colors">
-                      <TableCell className="font-medium">#{i + 1}</TableCell>
+                      <TableCell className="font-medium">#{m.id}</TableCell>
                       <TableCell className="font-medium text-foreground">{m.nombre}</TableCell>
                       <TableCell className="text-muted-foreground">{m.titulo}</TableCell>
                       <TableCell>{getStatusBadge(m.estado)}</TableCell>
