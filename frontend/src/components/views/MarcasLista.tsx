@@ -16,7 +16,7 @@ import {
 import { Search, Filter, Plus, MoreHorizontal, Edit, Trash2, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-import { useMarcasInfinite, useDeleteMarca } from "@/components/hooks/marcas"; // <- usa el hook infinito
+import { useMarcasInfinite, useDeleteMarca } from "@/components/hooks/marcas";
 import { useToast } from "@/components/hooks/use-toast";
 import type { Marca } from "@/types/marca-api";
 import type { Estado } from "@/lib/marcas.key";
@@ -35,6 +35,9 @@ export default function MarcasLista() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const debouncedSearch = useDebouncedValue(searchTerm, 350);
+
+  // Para deshabilitar solo el botón de la fila que se está eliminando
+  const [pendingId, setPendingId] = useState<number | null>(null);
 
   // Límite por batch (ajústalo a gusto)
   const limit = 20;
@@ -75,11 +78,15 @@ export default function MarcasLista() {
 
   const handleDelete = async (id: number, nombre: string) => {
     try {
+      setPendingId(id);
       await del.mutateAsync(id);
       toast({ title: "Marca eliminada", description: `Se eliminó "${nombre}".` });
-      // useDeleteMarca ya invalida ["marcas"], por lo que se refrescan los batches
-    } catch {
-      toast({ title: "Error al eliminar", description: "Inténtalo de nuevo más tarde.", variant: "destructive" });
+      // El hook invalida y actualiza listas/infinite queries
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Inténtalo de nuevo más tarde.";
+      toast({ title: "Error al eliminar", description: msg, variant: "destructive" });
+    } finally {
+      setPendingId(null);
     }
   };
 
@@ -171,7 +178,7 @@ export default function MarcasLista() {
                         <div className="flex justify-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
+                              <Button variant="ghost" className="h-8 w-8 p-0" aria-label="Ver acciones">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -183,9 +190,13 @@ export default function MarcasLista() {
                                 </Link>
                               </DropdownMenuItem>
 
+                              {/* Imp: prevenir el default para que el Dialog abra bien desde un DropdownItem */}
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem className="cursor-pointer text-destructive">
+                                  <DropdownMenuItem
+                                    className="cursor-pointer text-destructive"
+                                    onSelect={(e) => e.preventDefault()}
+                                  >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Eliminar
                                   </DropdownMenuItem>
@@ -198,12 +209,22 @@ export default function MarcasLista() {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogCancel disabled={pendingId === m.id || del.isPending}>
+                                      Cancelar
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       onClick={() => handleDelete(m.id, m.nombre)}
+                                      disabled={pendingId === m.id || del.isPending}
                                     >
-                                      Confirmar
+                                      {pendingId === m.id || del.isPending ? (
+                                        <span className="inline-flex items-center gap-2">
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                          Eliminando…
+                                        </span>
+                                      ) : (
+                                        "Confirmar"
+                                      )}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
