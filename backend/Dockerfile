@@ -35,7 +35,7 @@ ENV ENVIRONMENT=production \
 # Alternativa: exporta también DATABASE_URL_SYNC sin +asyncpg y léelo en env.py.
 
 # Copiamos entrypoint y lo marcamos ejecutable
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY /entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000

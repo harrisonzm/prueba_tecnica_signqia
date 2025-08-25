@@ -48,12 +48,24 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
   // mutations
   const create = useCreateMarca();
 
-  // RHF + Zod
+  // RHF + Zod (validación en vivo)
   const form = useForm<FormValues>({
     resolver: zodResolver(MarcaCreateSchema),
     defaultValues: { nombre: "", titulo: "", estado: "ACTIVA" },
-    mode: "onTouched",
+    mode: "onChange",
+    reValidateMode: "onChange",
+    criteriaMode: "all",
+    delayError: 200,
   });
+
+  // valores observados (para habilitar botones y mostrar resumen en vivo)
+  const nombre = form.watch("nombre");
+  const titulo = form.watch("titulo");
+  const estado = form.watch("estado");
+  const { errors } = form.formState;
+
+  const step0Valid = !!nombre?.trim() && !!titulo?.trim() && !errors.nombre && !errors.titulo;
+  const step1Valid = !!estado && !errors.estado;
 
   // si es update, resetea cuando llegue el detalle
   useEffect(() => {
@@ -82,7 +94,7 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
       ["estado"],
       [],
     ];
-    const valid = await form.trigger(fieldsByStep[currentStep]);
+    const valid = await form.trigger(fieldsByStep[currentStep]); // valida solo los campos del paso
     if (!valid) return;
     setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
   }, [currentStep, form, steps.length]);
@@ -163,17 +175,27 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
       <div className="space-y-4 max-w-md mx-auto">
         <div className="space-y-2">
           <Label htmlFor="nombre" className="text-sm font-medium">Nombre *</Label>
-          <Input id="nombre" placeholder="Ej: MiMarca Innovadora" {...form.register("nombre")} />
-          {form.formState.errors.nombre && (
-            <p className="text-sm text-destructive">{form.formState.errors.nombre.message}</p>
+          <Input
+            id="nombre"
+            placeholder="Ej: MiMarca Innovadora"
+            aria-invalid={!!errors.nombre}
+            {...form.register("nombre")}
+          />
+          {errors.nombre && (
+            <p className="text-sm text-destructive">{errors.nombre.message as string}</p>
           )}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="titulo" className="text-sm font-medium">Título *</Label>
-          <Input id="titulo" placeholder="Ej: Titular / Empresa S.A." {...form.register("titulo")} />
-          {form.formState.errors.titulo && (
-            <p className="text-sm text-destructive">{form.formState.errors.titulo.message}</p>
+          <Input
+            id="titulo"
+            placeholder="Ej: Titular / Empresa S.A."
+            aria-invalid={!!errors.titulo}
+            {...form.register("titulo")}
+          />
+          {errors.titulo && (
+            <p className="text-sm text-destructive">{errors.titulo.message as string}</p>
           )}
         </div>
       </div>
@@ -192,14 +214,15 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
         <select
           id="estado"
           className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          aria-invalid={!!errors.estado}
           {...form.register("estado")}
         >
           {ESTADOS.map((e) => (
             <option key={e} value={e}>{e}</option>
           ))}
         </select>
-        {form.formState.errors.estado && (
-          <p className="text-sm text-destructive">{form.formState.errors.estado.message}</p>
+        {errors.estado && (
+          <p className="text-sm text-destructive">{errors.estado.message as string}</p>
         )}
       </div>
     </div>
@@ -218,18 +241,18 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Nombre</Label>
               <p className="text-lg font-semibold text-foreground">
-                {form.getValues("nombre") || "—"}
+                {nombre?.trim() || "—"}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Título</Label>
               <p className="text-lg font-semibold text-foreground">
-                {form.getValues("titulo") || "—"}
+                {titulo?.trim() || "—"}
               </p>
             </div>
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Estado</Label>
-              <p className="text-foreground">{form.getValues("estado") || "—"}</p>
+              <p className="text-foreground">{estado || "—"}</p>
             </div>
           </CardContent>
         </Card>
@@ -244,8 +267,8 @@ export default function MarcaForm({ mode, id = NaN }: MarcaFormProps) {
   };
 
   const canContinue =
-    (currentStep === 0 && form.getValues("nombre").trim() && form.getValues("titulo").trim()) ||
-    (currentStep === 1 && form.getValues("estado")) ||
+    (currentStep === 0 && step0Valid) ||
+    (currentStep === 1 && step1Valid) ||
     currentStep === 2;
 
   const isPending = mode === "create" ? create.isPending : update.isPending;
