@@ -8,3 +8,4 @@ orjson
 asyncpg
 alembic
 psycopg[binary]>=3.1
+psycopg2
